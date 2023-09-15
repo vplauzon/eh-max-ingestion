@@ -1,1 +1,1 @@
-.create-merge table Events(Id:string)
+.create-merge table RawEvents(Id:string)
