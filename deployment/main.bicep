@@ -29,7 +29,10 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
     name: 'Standard'
     tier: 'Standard'
   }
-  properties: {}
+  properties: {
+    isAutoInflateEnabled: true
+    maximumThroughputUnits: 40
+  }
 
   resource eventHub 'eventhubs' = {
     name: eventHubName
@@ -85,7 +88,7 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
       kind: 'EventHub'
       properties: {
         compression: 'None'
-        consumerGroup:  eventHubNamespace::eventHub::kustoConsumerGroup.name
+        consumerGroup: eventHubNamespace::eventHub::kustoConsumerGroup.name
         dataFormat: 'MULTIJSON'
         eventHubResourceId: eventHubNamespace::eventHub.id
         eventSystemProperties: [
@@ -98,7 +101,6 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
     }
   }
 }
-
 
 //  We need to authorize the cluster to read the event hub by assigning the role
 //  "Azure Event Hubs Data Receiver"
