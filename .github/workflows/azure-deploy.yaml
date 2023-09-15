@@ -1,4 +1,4 @@
-name:  Continuous Integration
+name:  Deploy Azure
 
 on:
   workflow_dispatch
