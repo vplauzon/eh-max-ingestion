@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Producer;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Text.Json;
 
@@ -8,7 +9,8 @@ namespace EhMaxIngestionConsole
 {
     internal class Program
     {
-        private const int PAYLOAD_MAX_SIZE = 1024 * 1024;
+        private const int PAYLOAD_MAX_SIZE = 1048576;
+        private const long EVENT_COUNT_REPORT = 10;
         private const int GATEWAY_COUNT = 200;
         private const int DRONE_COUNT = 1000;
         private const int DRONE_EVENT_MIN_COUNT = 5;
@@ -28,8 +30,13 @@ namespace EhMaxIngestionConsole
             var config = SimulatorConfiguration.FromEnvironmentVariables();
             var producer = new EventHubProducerClient(config.EventHubConnectionString);
             var cancellationTokenSource = new CancellationTokenSource();
+            var networkQueue = new ConcurrentQueue<Task>();
             var tasks = Enumerable.Range(0, config.ThreadCount)
-                .Select(i => PushEventsAsync(producer, cancellationTokenSource.Token))
+                .Select(i => PushEventsAsync(
+                    producer,
+                    networkQueue,
+                    config.NetworkQueueDepth,
+                    cancellationTokenSource.Token))
                 .ToImmutableArray();
 
             AppDomain.CurrentDomain.ProcessExit += (object? sender, EventArgs e) =>
@@ -42,10 +49,13 @@ namespace EhMaxIngestionConsole
 
         private static async Task PushEventsAsync(
             EventHubProducerClient producer,
+            ConcurrentQueue<Task> networkQueue,
+            int networkQueueDepth,
             CancellationToken token)
         {
             var eventTextList = new List<string>();
             var totalEventSize = 0;
+            var eventCount = (long)0;
 
             using (var stream = new MemoryStream())
             {
@@ -56,9 +66,18 @@ namespace EhMaxIngestionConsole
 
                     if (totalEventSize + 1 + gatewayEventText.Length > PAYLOAD_MAX_SIZE)
                     {
-                        await SendEventAsync(producer, eventTextList);
+                        await SendEventAsync(
+                            producer,
+                            networkQueue,
+                            networkQueueDepth,
+                            eventTextList);
                         eventTextList.Clear();
                         totalEventSize = 0;
+                        ++eventCount;
+                        if (eventCount % EVENT_COUNT_REPORT == 0)
+                        {
+                            Console.WriteLine($"Events:  {eventCount}");
+                        }
                     }
                     totalEventSize += gatewayEventText.Length;
                     totalEventSize += eventTextList.Any() ? 1 : 0;
@@ -69,12 +88,34 @@ namespace EhMaxIngestionConsole
 
         private static async Task SendEventAsync(
             EventHubProducerClient producer,
+            ConcurrentQueue<Task> networkQueue,
+            int networkQueueDepth,
             IEnumerable<string> eventTextList)
         {
             var eventBody = string.Join('\n', eventTextList);
             var eventData = new EventData(eventBody);
 
-            await producer.SendAsync(new[] { eventData });
+            while (networkQueue.Count() > networkQueueDepth)
+            {
+                if (networkQueue.TryPeek(out var task))
+                {
+                    if (!task.IsCompleted)
+                    {   //  Await the send at the bottom of the queue
+                        await task;
+                    }
+                    else
+                    {
+                        if (networkQueue.TryDequeue(out var otherTask))
+                        {   //  Await in case we picked another task
+                            await otherTask;
+                        }
+                    }
+                }
+            }
+
+            var newTask = producer.SendAsync(new[] { eventData });
+
+            networkQueue.Enqueue(newTask);
         }
 
         private static GatewayEvent CreateGatewayEvent()
@@ -83,8 +124,7 @@ namespace EhMaxIngestionConsole
                 .Range(0, _random.Next(DRONE_EVENT_MIN_COUNT, DRONE_EVENT_MAX_COUNT))
                 .Select(i => new DroneEvent
                 {
-                    DroneId = _droneIds[_random.Next(_droneIds.Count)],
-
+                    DroneId = _droneIds[_random.Next(_droneIds.Count)]
                 })
                 .ToImmutableArray();
             var gatewayEvent = new GatewayEvent
