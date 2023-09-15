@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Immutable;
 
 namespace EhMaxIngestionConsole
 {
-    public class GatewayMessage
+    public class GatewayEvent
     {
         public string GatewayId { get; set; } = string.Empty;
 
@@ -10,6 +11,6 @@ namespace EhMaxIngestionConsole
         
         public DateTime MessageTimestamp { get; set; } = DateTime.Now;
 
-        public DroneEvent[] Events { get; set; } = new DroneEvent[0];
+        public IImmutableList<DroneEvent> Events { get; set; } = ImmutableArray<DroneEvent>.Empty;
     }
 }
