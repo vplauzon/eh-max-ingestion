@@ -43,7 +43,7 @@ jobs:
     # See https://learn.microsoft.com/en-us/azure/container-registry/container-registry-quickstart-task-cli
     - name:  Docker Build / Push workbench
       run:  |
-        az acr build --image kusto/eh-max-ingestion:${{ github.run_number }} \
+        az acr build --image kusto/eh-max-ingestion:latest \
           --registry $registry \
           --file deployment/docker/Dockerfile bin
 
