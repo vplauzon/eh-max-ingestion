@@ -24,31 +24,8 @@ param eventHubName string = 'kustoHub'
 @description('Name of registry')
 param registryName string = 'registry${uniqueString(resourceGroup().id)}'
 
-resource registry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: registryName
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    adminUserEnabled: true
-    anonymousPullEnabled: false
-    dataEndpointEnabled: false
-    policies: {
-      azureADAuthenticationAsArmPolicy: {
-        status: 'enabled'
-      }
-      retentionPolicy: {
-        status: 'disabled'
-      }
-      softDeletePolicy: {
-        status: 'disabled'
-      }
-    }
-    publicNetworkAccess: 'enabled'
-    zoneRedundancy: 'disabled'
-  }
-}
+@description('Name of app environment')
+param appEnvironmentName string = 'appEnv${uniqueString(resourceGroup().id)}'
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   name: eventHubNamespaceName
@@ -128,6 +105,43 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
         tableName: 'RawEvents'
       }
     }
+  }
+}
+
+resource registry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
+  name: registryName
+  location: location
+  sku: {
+    name: 'Basic'
+  }
+  properties: {
+    adminUserEnabled: true
+    anonymousPullEnabled: false
+    dataEndpointEnabled: false
+    policies: {
+      azureADAuthenticationAsArmPolicy: {
+        status: 'enabled'
+      }
+      retentionPolicy: {
+        status: 'disabled'
+      }
+      softDeletePolicy: {
+        status: 'disabled'
+      }
+    }
+    publicNetworkAccess: 'enabled'
+    zoneRedundancy: 'disabled'
+  }
+}
+
+resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
+  name: appEnvironmentName
+  location: location
+  sku: {
+    name: 'Consumption'
+  }
+  properties: {
+    zoneRedundant: false
   }
 }
 
