@@ -45,7 +45,7 @@ jobs:
       run:  |
         az acr build --image kusto/eh-max-ingestion:${{ github.run_number }} \
           --registry $registry \
-          --file deployment/docker/Dockerfile workbench
+          --file deployment/docker/Dockerfile bin
 
     # - name: Deploy infra
     #   run: |
