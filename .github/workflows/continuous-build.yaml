@@ -29,7 +29,9 @@ jobs:
     - name: .NET Build Console
       run: dotnet build code/EhMaxIngestionConsole --configuration Release --no-restore
     - name: Copy binaries
-      run: cp code/EhMaxIngestionConsole/bin/Release/net* bin
+      run: |
+        mkdir bin
+        cp code/EhMaxIngestionConsole/bin/Release/net*/* bin
 
     - name: Retrieve docker registry
       run: |
