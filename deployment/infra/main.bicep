@@ -27,6 +27,9 @@ param registryName string = 'registry${uniqueString(resourceGroup().id)}'
 @description('Name of app environment')
 param appEnvironmentName string = 'appEnv${uniqueString(resourceGroup().id)}'
 
+@description('Name of app')
+param appName string = 'app${uniqueString(resourceGroup().id)}'
+
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   name: eventHubNamespaceName
   location: location
@@ -142,6 +145,54 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
   }
   properties: {
     zoneRedundant: false
+  }
+}
+
+resource app 'Microsoft.App/containerApps@2022-10-01' = {
+  name: appName
+  location: location
+  dependsOn: [
+    // userIdentityRbacAuthorization
+  ]
+  // identity: {
+  //   type: 'UserAssigned'
+  //   userAssignedIdentities: {
+  //     '${containerFetchingIdentity.id}': {}
+  //   }
+  // }
+  properties: {
+    configuration: {
+      activeRevisionsMode: 'Single'
+      registries: [
+        {
+          // identity: containerFetchingIdentity.id
+          server: registry.properties.loginServer
+        }
+      ]
+      secrets: [
+        // {
+        //   name: appSecretName
+        //   value: appSecret
+        // }
+      ]
+    }
+    environmentId: appEnvironment.id
+    template: {
+      containers: [
+        {
+          image: '${registry.name}.azurecr.io/kusto/eh-max-ingestion:latest'
+          name: 'eh-max-ingestion'
+          resources: {
+            cpu: '0.25'
+            memory: '0.5Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
+    }
   }
 }
 
