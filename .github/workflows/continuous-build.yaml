@@ -1,0 +1,51 @@
+name:  Continuous Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'code/**'
+    branches:
+      - main
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 7.x
+
+    - name: Azure Login
+      run: az login --service-principal -u ${{ secrets.DEPLOY_CLIENT_ID }} -p ${{ secrets.DEPLOY_SECRET }} --tenant ${{ secrets.TENANT_ID }}
+    - name: Azure Subscription Set
+      run: az account set --name ${{ secrets.SUBSCRIPTION }}
+
+    - name: Install dependencies
+      run: dotnet restore code
+    - name: .NET Build All
+      run: dotnet build code --configuration Release --no-restore
+
+    - name: Retrieve docker registry
+      run: |
+        registry=$(az acr list -g ${{ secrets.RESOURCE_GROUP }} --query "[0].name" -o tsv)
+        echo "Registry:  $registry"
+        echo "registry=$registry" >> $GITHUB_ENV
+
+
+    # See https://learn.microsoft.com/en-us/azure/container-registry/container-registry-quickstart-task-cli
+    - name:  Docker Build / Push workbench
+      run:  |
+        az acr build --image kustox/workbench:${{ steps.patch-version-workbench.outputs.full-version }} \
+          --registry $registry \
+          --file deployment/docker/workbench/Dockerfile workbench
+
+    # - name: Deploy infra
+    #   run: |
+    #     cd deployment/infra
+    #     bash deploy-infra.sh ${{ secrets.RESOURCE_GROUP }} $environment \
+    #     ${{ steps.patch-version-workbench.outputs.full-version }} \
+    #     ${{ secrets.TENANT_ID }}  ${{ secrets.APP_ID }} ${{ secrets.APP_SECRET }}
