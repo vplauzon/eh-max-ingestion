@@ -26,8 +26,10 @@ jobs:
 
     - name: Install dependencies
       run: dotnet restore code
-    - name: .NET Build All
-      run: dotnet build code --configuration Release --no-restore
+    - name: .NET Build Console
+      run: dotnet build code/EhMaxIngestionConsole --configuration Release --no-restore
+    - name: Copy binaries
+      run: cp code/EhMaxIngestionConsole/bin/Release/net* bin
 
     - name: Retrieve docker registry
       run: |
@@ -39,9 +41,9 @@ jobs:
     # See https://learn.microsoft.com/en-us/azure/container-registry/container-registry-quickstart-task-cli
     - name:  Docker Build / Push workbench
       run:  |
-        az acr build --image kustox/workbench:${{ steps.patch-version-workbench.outputs.full-version }} \
+        az acr build --image kusto/eh-max-ingestion:${{ github.run_number }} \
           --registry $registry \
-          --file deployment/docker/workbench/Dockerfile workbench
+          --file deployment/docker/Dockerfile workbench
 
     # - name: Deploy infra
     #   run: |
