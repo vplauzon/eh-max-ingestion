@@ -19,11 +19,6 @@ jobs:
       with:
         dotnet-version: 7.x
 
-    - name: Azure Login
-      run: az login --service-principal -u ${{ secrets.DEPLOY_CLIENT_ID }} -p ${{ secrets.DEPLOY_SECRET }} --tenant ${{ secrets.TENANT_ID }}
-    - name: Azure Subscription Set
-      run: az account set --name ${{ secrets.SUBSCRIPTION }}
-
     - name: Install dependencies
       run: dotnet restore code
     - name: .NET Build Console
@@ -32,6 +27,11 @@ jobs:
       run: |
         mkdir bin
         cp code/EhMaxIngestionConsole/bin/Release/net*/* bin
+
+    - name: Azure Login
+      run: az login --service-principal -u ${{ secrets.DEPLOY_CLIENT_ID }} -p ${{ secrets.DEPLOY_SECRET }} --tenant ${{ secrets.TENANT_ID }}
+    - name: Azure Subscription Set
+      run: az account set --name ${{ secrets.SUBSCRIPTION }}
 
     - name: Retrieve docker registry
       run: |
