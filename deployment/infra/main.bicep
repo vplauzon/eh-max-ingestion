@@ -185,8 +185,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           image: '${registry.name}.azurecr.io/kusto/eh-max-ingestion:latest'
           name: 'eh-max-ingestion'
           resources: {
-            cpu: '0.5'
-            memory: '1Gi'
+            cpu: '2'
+            memory: '4Gi'
           }
           env: [
             {
@@ -195,7 +195,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'THREAD_COUNT'
-              value: '1'
+              value: '4'
             }
             {
               name: 'NETWORK_QUEUE_DEPTH'
