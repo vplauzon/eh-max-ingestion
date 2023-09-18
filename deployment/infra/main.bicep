@@ -195,18 +195,18 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'THREAD_COUNT'
-              value: '8'
+              value: '4'
             }
             {
               name: 'NETWORK_QUEUE_DEPTH'
-              value: '50'
+              value: '20'
             }
           ]
         }
       ]
       scale: {
-        minReplicas: 1
-        maxReplicas: 1
+        minReplicas: 2
+        maxReplicas: 2
       }
     }
   }
