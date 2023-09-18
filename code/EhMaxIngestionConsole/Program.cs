@@ -9,7 +9,7 @@ namespace EhMaxIngestionConsole
 {
     internal class Program
     {
-        private const int PAYLOAD_MAX_SIZE = 1048576;
+        private const int PAYLOAD_MAX_SIZE = 1000000;
         private const long EVENT_COUNT_REPORT = 10;
         private const int GATEWAY_COUNT = 200;
         private const int DRONE_COUNT = 1000;
