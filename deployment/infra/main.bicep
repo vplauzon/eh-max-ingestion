@@ -147,7 +147,7 @@ resource userIdentityRbacAuthorization 'Microsoft.Authorization/roleAssignments@
   }
 }
 
-resource app 'Microsoft.App/containerApps@2022-10-01' = {
+resource app 'Microsoft.App/containerApps@2023-05-01' = {
   name: 'emitter-app-${suffix}'
   location: location
   dependsOn: [
@@ -179,6 +179,20 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
             cpu: '0.25'
             memory: '0.5Gi'
           }
+          env: [
+            {
+              name: 'EVENT_HUB_CONN_STRING'
+              value: 'eventHubNamespace::eventHub'
+            }
+            {
+              name: 'THREAD_COUNT'
+              value: '1'
+            }
+            {
+              name: 'NETWORK_QUEUE_DEPTH'
+              value: '25'
+            }
+          ]
         }
       ]
       scale: {
