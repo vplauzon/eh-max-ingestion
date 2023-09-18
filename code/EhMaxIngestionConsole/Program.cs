@@ -28,6 +28,9 @@ namespace EhMaxIngestionConsole
         static async Task Main(string[] args)
         {
             var config = SimulatorConfiguration.FromEnvironmentVariables();
+
+            DisplayConfig(config);
+
             var producer = new EventHubProducerClient(config.EventHubConnectionString);
             var cancellationTokenSource = new CancellationTokenSource();
             var networkQueue = new ConcurrentQueue<Task>();
@@ -45,6 +48,15 @@ namespace EhMaxIngestionConsole
             };
 
             await Task.WhenAll(tasks);
+        }
+
+        private static void DisplayConfig(SimulatorConfiguration config)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"Event Hub:  {config.EventHubConnectionString}");
+            Console.WriteLine($"Thread count:  {config.ThreadCount}");
+            Console.WriteLine($"Network depth queue:  {config.NetworkQueueDepth}");
+            Console.WriteLine();
         }
 
         private static async Task PushEventsAsync(
