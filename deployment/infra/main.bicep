@@ -148,7 +148,7 @@ resource userIdentityRbacAuthorization 'Microsoft.Authorization/roleAssignments@
 }
 
 resource app 'Microsoft.App/containerApps@2022-10-01' = {
-  name: 'emitterApp${suffix}'
+  name: 'emitter-app-${suffix}'
   location: location
   dependsOn: [
     userIdentityRbacAuthorization
