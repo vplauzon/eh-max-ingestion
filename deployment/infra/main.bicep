@@ -182,7 +182,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           env: [
             {
               name: 'EVENT_HUB_CONN_STRING'
-              value: 'eventHubNamespace::eventHub'
+              value: eventHubNamespace::eventHub.properties.authorizationRules[0].connectionString
             }
             {
               name: 'THREAD_COUNT'
