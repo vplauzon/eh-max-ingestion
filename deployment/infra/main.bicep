@@ -31,6 +31,15 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
       partitionCount: 32
     }
 
+    resource emitterSend 'authorizationRules' = {
+      name: 'emitter-send'
+      properties: {
+        rights: [
+          'Send'
+        ]
+      }
+    }
+
     resource kustoConsumerGroup 'consumergroups' = {
       name: 'kustoConsumerGroup'
       properties: {}
@@ -182,7 +191,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           env: [
             {
               name: 'EVENT_HUB_CONN_STRING'
-              value: eventHubNamespace::eventHub.properties.authorizationRules[0].connectionString
+              value: eventHubNamespace::eventHub::emitterSend.listKeys().primaryConnectionString
             }
             {
               name: 'THREAD_COUNT'
