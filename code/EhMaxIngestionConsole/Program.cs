@@ -10,7 +10,7 @@ namespace EhMaxIngestionConsole
     internal class Program
     {
         private const int PAYLOAD_MAX_SIZE = 1000000;
-        private const long EVENT_COUNT_REPORT = 10;
+        private const long EVENT_COUNT_REPORT = 100;
         private const int GATEWAY_COUNT = 200;
         private const int DRONE_COUNT = 1000;
         private const int DRONE_EVENT_MIN_COUNT = 5;
@@ -85,13 +85,13 @@ namespace EhMaxIngestionConsole
                             networkQueueDepth,
                             GetEventBody(eventTextList));
                         eventTextList.Clear();
-                        ++eventCount;
-                        if (eventCount % EVENT_COUNT_REPORT == 0)
-                        {
-                            Console.WriteLine($"Events:  {eventCount}");
-                        }
                     }
                     eventTextList.Add(gatewayEventText);
+                    ++eventCount;
+                    if (eventCount % EVENT_COUNT_REPORT == 0)
+                    {
+                        Console.WriteLine($"Events:  {eventCount}");
+                    }
                 }
             }
         }
