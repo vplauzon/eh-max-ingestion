@@ -66,7 +66,6 @@ namespace EhMaxIngestionConsole
             CancellationToken token)
         {
             var eventTextList = new List<string>();
-            var totalEventSize = 0;
             var eventCount = (long)0;
 
             using (var stream = new MemoryStream())
@@ -76,35 +75,37 @@ namespace EhMaxIngestionConsole
                     var gatewayEvent = CreateGatewayEvent();
                     var gatewayEventText = JsonSerializer.Serialize(gatewayEvent);
 
-                    if (totalEventSize + 1 + gatewayEventText.Length > PAYLOAD_MAX_SIZE)
+                    if (GetEventBody(eventTextList.Append(gatewayEventText)).Length
+                        > PAYLOAD_MAX_SIZE)
                     {
                         await SendEventAsync(
                             producer,
                             networkQueue,
                             networkQueueDepth,
-                            eventTextList);
+                            GetEventBody(eventTextList));
                         eventTextList.Clear();
-                        totalEventSize = 0;
                         ++eventCount;
                         if (eventCount % EVENT_COUNT_REPORT == 0)
                         {
                             Console.WriteLine($"Events:  {eventCount}");
                         }
                     }
-                    totalEventSize += gatewayEventText.Length;
-                    totalEventSize += eventTextList.Any() ? 1 : 0;
                     eventTextList.Add(gatewayEventText);
                 }
             }
+        }
+
+        private static string GetEventBody(IEnumerable<string> eventTextList)
+        {
+            return string.Join('\n', eventTextList);
         }
 
         private static async Task SendEventAsync(
             EventHubProducerClient producer,
             ConcurrentQueue<Task> networkQueue,
             int networkQueueDepth,
-            IEnumerable<string> eventTextList)
+            string eventBody)
         {
-            var eventBody = string.Join('\n', eventTextList);
             var eventData = new EventData(eventBody);
 
             while (networkQueue.Count() > networkQueueDepth)
