@@ -29,6 +29,7 @@ namespace EhMaxIngestionConsole
         {
             var config = SimulatorConfiguration.FromEnvironmentVariables();
 
+            Console.WriteLine("EH Emitter v1.0");
             DisplayConfig(config);
 
             var producer = new EventHubProducerClient(config.EventHubConnectionString);
