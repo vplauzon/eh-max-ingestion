@@ -1,9 +1,6 @@
 @description('Location for all resources')
 param location string = resourceGroup().location
 
-@description('Name of the cluster')
-param clusterName string = 'kusto${uniqueString(resourceGroup().id)}'
-
 @description('Name of the sku')
 param skuName string = 'Standard_E2d_v5'
 
@@ -12,26 +9,10 @@ param skuName string = 'Standard_E2d_v5'
 @maxValue(1000)
 param skuCapacity int = 2
 
-@description('Name of the database')
-param databaseName string = 'telemetry'
-
-@description('Name of Event Hub\'s namespace')
-param eventHubNamespaceName string = 'eventHub${uniqueString(resourceGroup().id)}'
-
-@description('Name of Event Hub')
-param eventHubName string = 'kustoHub'
-
-@description('Name of registry')
-param registryName string = 'registry${uniqueString(resourceGroup().id)}'
-
-@description('Name of app environment')
-param appEnvironmentName string = 'appEnv${uniqueString(resourceGroup().id)}'
-
-@description('Name of app')
-param appName string = 'app${uniqueString(resourceGroup().id)}'
+var suffix = uniqueString(resourceGroup().id)
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
-  name: eventHubNamespaceName
+  name: 'eventHub${suffix}'
   location: location
   sku: {
     capacity: 1
@@ -44,7 +25,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
   }
 
   resource eventHub 'eventhubs' = {
-    name: eventHubName
+    name: 'kustoHub'
     properties: {
       messageRetentionInDays: 2
       partitionCount: 32
@@ -58,7 +39,7 @@ resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
 }
 
 resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
-  name: clusterName
+  name: 'kusto${suffix}'
   location: location
   sku: {
     name: skuName
@@ -70,7 +51,7 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
   }
 
   resource kustoDb 'databases' = {
-    name: databaseName
+    name: 'telemetry'
     location: location
     kind: 'ReadWrite'
 
@@ -112,7 +93,7 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
 }
 
 resource registry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = {
-  name: registryName
+  name: 'registry${suffix}'
   location: location
   sku: {
     name: 'Basic'
@@ -138,7 +119,7 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' = 
 }
 
 resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
-  name: appEnvironmentName
+  name: 'appEnv${suffix}'
   location: location
   sku: {
     name: 'Consumption'
@@ -148,32 +129,44 @@ resource appEnvironment 'Microsoft.App/managedEnvironments@2022-10-01' = {
   }
 }
 
+resource containerFetchingIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'containerFetchingId-${suffix}'
+  location: location
+}
+
+//  We also need to authorize the user identity to pull container images from the registry
+resource userIdentityRbacAuthorization 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(containerFetchingIdentity.id, registry.id, 'rbac')
+  scope: registry
+
+  properties: {
+    description: 'Giving AcrPull RBAC to identity'
+    principalId: containerFetchingIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
+  }
+}
+
 resource app 'Microsoft.App/containerApps@2022-10-01' = {
-  name: appName
+  name: 'emitterApp${suffix}'
   location: location
   dependsOn: [
-    // userIdentityRbacAuthorization
+    userIdentityRbacAuthorization
   ]
-  // identity: {
-  //   type: 'UserAssigned'
-  //   userAssignedIdentities: {
-  //     '${containerFetchingIdentity.id}': {}
-  //   }
-  // }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${containerFetchingIdentity.id}': {}
+    }
+  }
   properties: {
     configuration: {
       activeRevisionsMode: 'Single'
       registries: [
         {
-          // identity: containerFetchingIdentity.id
+          identity: containerFetchingIdentity.id
           server: registry.properties.loginServer
         }
-      ]
-      secrets: [
-        // {
-        //   name: appSecretName
-        //   value: appSecret
-        // }
       ]
     }
     environmentId: appEnvironment.id
@@ -202,7 +195,7 @@ resource app 'Microsoft.App/containerApps@2022-10-01' = {
 var dataReceiverId = 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
 var fullDataReceiverId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', dataReceiverId)
 var eventHubRoleAssignmentName = '${resourceGroup().id}${cluster.name}${dataReceiverId}${eventHubNamespace::eventHub.name}'
-var roleAssignmentName = guid(eventHubRoleAssignmentName, eventHubName, dataReceiverId, clusterName)
+var roleAssignmentName = guid(eventHubRoleAssignmentName, eventHubNamespace::eventHub.name, dataReceiverId, cluster.name)
 
 resource clusterEventHubAuthorization 'Microsoft.Authorization/roleAssignments@2021-04-01-preview' = {
   name: roleAssignmentName
