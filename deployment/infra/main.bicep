@@ -185,7 +185,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
           image: '${registry.name}.azurecr.io/kusto/eh-max-ingestion:latest'
           name: 'eh-max-ingestion'
           resources: {
-            cpu: '0.25'
+            cpu: '1'
             memory: '0.5Gi'
           }
           env: [
