@@ -25,6 +25,8 @@ namespace EhMaxIngestionConsole
             .ToImmutableArray();
         private static readonly Random _random = new Random();
 
+        private static long _eventCount = 0;
+
         static async Task Main(string[] args)
         {
             var config = SimulatorConfiguration.FromEnvironmentVariables();
@@ -67,7 +69,6 @@ namespace EhMaxIngestionConsole
             CancellationToken token)
         {
             var eventTextList = new List<string>();
-            var eventCount = (long)0;
 
             using (var stream = new MemoryStream())
             {
@@ -87,7 +88,7 @@ namespace EhMaxIngestionConsole
                         eventTextList.Clear();
                     }
                     eventTextList.Add(gatewayEventText);
-                    ++eventCount;
+                    Interlocked.Increment(ref _eventCount);
                     if (eventCount % EVENT_COUNT_REPORT == 0)
                     {
                         Console.WriteLine($"Events:  {eventCount}");
