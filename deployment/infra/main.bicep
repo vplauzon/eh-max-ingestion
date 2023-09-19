@@ -204,8 +204,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 10
-        maxReplicas: 10
+        minReplicas: 8
+        maxReplicas: 8
       }
     }
   }
