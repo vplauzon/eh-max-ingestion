@@ -198,7 +198,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'NETWORK_QUEUE_DEPTH'
-              value: '20'
+              value: '10'
             }
           ]
         }
