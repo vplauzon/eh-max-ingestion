@@ -194,11 +194,11 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'THREAD_COUNT'
-              value: '2'
+              value: '4'
             }
             {
               name: 'NETWORK_QUEUE_DEPTH'
-              value: '30'
+              value: '50'
             }
           ]
         }
