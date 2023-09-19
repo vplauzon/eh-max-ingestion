@@ -7,7 +7,7 @@ param skuName string = 'Standard_E4d_v5'
 @description('# of nodes')
 @minValue(2)
 @maxValue(1000)
-param skuCapacity int = 2
+param skuCapacity int = 4
 
 var suffix = uniqueString(resourceGroup().id)
 
