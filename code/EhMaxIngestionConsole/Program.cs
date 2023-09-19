@@ -108,29 +108,36 @@ namespace EhMaxIngestionConsole
             int networkQueueDepth,
             string eventBody)
         {
-            var eventData = new EventData(eventBody);
-
-            while (networkQueue.Count() > networkQueueDepth)
+            try
             {
-                if (networkQueue.TryPeek(out var task))
+                var eventData = new EventData(eventBody);
+
+                while (networkQueue.Count() > networkQueueDepth)
                 {
-                    if (!task.IsCompleted)
-                    {   //  Await the send at the bottom of the queue
-                        await task;
-                    }
-                    else
+                    if (networkQueue.TryPeek(out var task))
                     {
-                        if (networkQueue.TryDequeue(out var otherTask))
-                        {   //  Await in case we picked another task
-                            await otherTask;
+                        if (!task.IsCompleted)
+                        {   //  Await the send at the bottom of the queue
+                            await task;
+                        }
+                        else
+                        {
+                            if (networkQueue.TryDequeue(out var otherTask))
+                            {   //  Await in case we picked another task
+                                await otherTask;
+                            }
                         }
                     }
                 }
+
+                var newTask = producer.SendAsync(new[] { eventData });
+
+                networkQueue.Enqueue(newTask);
             }
-
-            var newTask = producer.SendAsync(new[] { eventData });
-
-            networkQueue.Enqueue(newTask);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error:  {ex.Message}");
+            }
         }
 
         private static GatewayEvent CreateGatewayEvent()
