@@ -1,12 +1,12 @@
-.alter-merge database policy retention softdelete = 2h recoverability = disabled
-
-.alter database RawEvents policy caching hot = 2h
-
 .create-merge table RawEvents(
     GatewayId:string,
     MessageId:string,
     MessageTimestamp:datetime,
     Events:dynamic)
+
+.alter-merge table RawEvents policy retention softdelete = 2h recoverability = disabled
+
+.alter table RawEvents RawEvents policy caching hot = 2h
 
 .alter-merge table RawEvents policy ingestionbatching
 ```
@@ -15,15 +15,6 @@
     "MaximumRawDataSizeMB": 1024
 }
 ```
-
-.create-merge table Events(
-    GatewayId:string,
-    MessageId:string,
-    DroneId:string,
-    Device:string,
-    Measurement:double,
-    MessageTimestamp:datetime,
-    EventTimestamp:datetime)
 
 .create-or-alter function ParseEvents(){
     RawEvents
@@ -37,6 +28,19 @@
         MessageTimestamp,
         EventTimestamp = todatetime(Events.EventTimestamp)
 }
+
+.create-merge table Events(
+    GatewayId:string,
+    MessageId:string,
+    DroneId:string,
+    Device:string,
+    Measurement:double,
+    MessageTimestamp:datetime,
+    EventTimestamp:datetime)
+
+.alter-merge table Events policy retention softdelete = 2h recoverability = disabled
+
+.alter table Events RawEvents policy caching hot = 2h
 
 .alter-merge table Events policy update
 ```
