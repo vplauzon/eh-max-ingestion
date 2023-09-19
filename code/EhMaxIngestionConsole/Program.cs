@@ -11,17 +11,12 @@ namespace EhMaxIngestionConsole
     {
         private const int PAYLOAD_MAX_SIZE = 1000000;
         private const long EVENT_COUNT_REPORT = 10000;
-        private const int GATEWAY_COUNT = 200;
-        private const int DRONE_COUNT = 1000;
+        private const int GATEWAY_COUNT = 100;
         private const int DRONE_EVENT_MIN_COUNT = 5;
         private const int DRONE_EVENT_MAX_COUNT = 20;
-        private static readonly IImmutableList<string> _gatewayIds = Enumerable
+        private static readonly IImmutableList<Gateway> _gateways = Enumerable
             .Range(0, GATEWAY_COUNT)
-            .Select(i => Guid.NewGuid().ToString())
-            .ToImmutableArray();
-        private static readonly IImmutableList<string> _droneIds = Enumerable
-            .Range(0, DRONE_COUNT)
-            .Select(i => Guid.NewGuid().ToString())
+            .Select(i => new Gateway())
             .ToImmutableArray();
         private static readonly Random _random = new Random();
 
@@ -31,7 +26,7 @@ namespace EhMaxIngestionConsole
         {
             var config = SimulatorConfiguration.FromEnvironmentVariables();
 
-            Console.WriteLine("EH Emitter v1.1");
+            Console.WriteLine("EH Emitter v1.2");
             DisplayConfig(config);
 
             var producer = new EventHubProducerClient(config.EventHubConnectionString);
@@ -140,16 +135,17 @@ namespace EhMaxIngestionConsole
 
         private static GatewayEvent CreateGatewayEvent()
         {
+            var gateway = _gateways[_random.Next(_gateways.Count)];
             var droneEvents = Enumerable
                 .Range(0, _random.Next(DRONE_EVENT_MIN_COUNT, DRONE_EVENT_MAX_COUNT))
                 .Select(i => new DroneEvent
                 {
-                    DroneId = _droneIds[_random.Next(_droneIds.Count)]
+                    DroneId = gateway.DroneIds[_random.Next(gateway.DroneIds.Count)]
                 })
                 .ToImmutableArray();
             var gatewayEvent = new GatewayEvent
             {
-                GatewayId = _gatewayIds[_random.Next(_gatewayIds.Count)],
+                GatewayId = gateway.GatewayId,
                 Events = droneEvents
             };
 
