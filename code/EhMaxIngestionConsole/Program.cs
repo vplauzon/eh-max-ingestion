@@ -10,7 +10,7 @@ namespace EhMaxIngestionConsole
     internal class Program
     {
         private const int PAYLOAD_MAX_SIZE = 1000000;
-        private const long EVENT_COUNT_REPORT = 100;
+        private const long EVENT_COUNT_REPORT = 10000;
         private const int GATEWAY_COUNT = 200;
         private const int DRONE_COUNT = 1000;
         private const int DRONE_EVENT_MIN_COUNT = 5;
@@ -29,7 +29,7 @@ namespace EhMaxIngestionConsole
         {
             var config = SimulatorConfiguration.FromEnvironmentVariables();
 
-            Console.WriteLine("EH Emitter v1.0");
+            Console.WriteLine("EH Emitter v1.1");
             DisplayConfig(config);
 
             var producer = new EventHubProducerClient(config.EventHubConnectionString);
