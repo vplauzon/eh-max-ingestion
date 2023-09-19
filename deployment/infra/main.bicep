@@ -2,7 +2,7 @@
 param location string = resourceGroup().location
 
 @description('Name of the sku')
-param skuName string = 'Standard_E2d_v5'
+param skuName string = 'Standard_E4d_v5'
 
 @description('# of nodes')
 @minValue(2)
@@ -194,7 +194,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'THREAD_COUNT'
-              value: '2'
+              value: '3'
             }
             {
               name: 'NETWORK_QUEUE_DEPTH'
