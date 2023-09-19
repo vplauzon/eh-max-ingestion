@@ -6,7 +6,7 @@
 
 .alter-merge table RawEvents policy retention softdelete = 2h recoverability = disabled
 
-.alter table RawEvents RawEvents policy caching hot = 2h
+.alter table RawEvents policy caching hot = 2h
 
 .alter-merge table RawEvents policy ingestionbatching
 ```
@@ -40,7 +40,7 @@
 
 .alter-merge table Events policy retention softdelete = 2h recoverability = disabled
 
-.alter table Events RawEvents policy caching hot = 2h
+.alter table Events policy caching hot = 2h
 
 .alter-merge table Events policy update
 ```
