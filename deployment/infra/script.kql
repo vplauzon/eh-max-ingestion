@@ -1,3 +1,7 @@
+.alter-merge database policy retention softdelete = 2h recoverability = disabled
+
+.alter database RawEvents policy caching hot = 2h
+
 .create-merge table RawEvents(
     GatewayId:string,
     MessageId:string,
@@ -12,6 +16,37 @@
 }
 ```
 
-.alter-merge table RawEvents policy retention softdelete = 2h recoverability = disabled
+.create-merge table Events(
+    GatewayId:string,
+    MessageId:string,
+    DroneId:string,
+    Device:string,
+    Measurement:double,
+    MessageTimestamp:datetime,
+    EventTimestamp:datetime)
 
-.alter table RawEvents policy caching hot = 2h
+.create-or-alter function ParseEvents(){
+    RawEvents
+    | mv-expand Events
+    | project
+        GatewayId,
+        MessageId,
+        DroneId = tostring(Events.DroneId),
+        Device = tostring(Events.Device),
+        Measurement = todouble(Events.Measurement),
+        MessageTimestamp,
+        EventTimestamp = todatetime(Events.EventTimestamp)
+}
+
+.alter-merge table Events policy update
+```
+[
+    {
+        "IsEnabled": true,
+        "Source": "RawEvents",
+        "Query": "ParseEvents",
+        "IsTransactional": true,
+        "PropagateIngestionProperties": true
+    }
+]
+```

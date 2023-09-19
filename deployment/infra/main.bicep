@@ -58,6 +58,14 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
   identity: {
     type: 'SystemAssigned'
   }
+  properties: {
+    optimizedAutoscale: {
+      isEnabled: true
+      minimum: 4
+      maximum: 20
+      version: 1
+    }
+  }
 
   resource kustoDb 'databases' = {
     name: 'telemetry'
