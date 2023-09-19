@@ -4,11 +4,6 @@ param location string = resourceGroup().location
 @description('Name of the sku')
 param skuName string = 'Standard_E8d_v5'
 
-@description('# of nodes')
-@minValue(2)
-@maxValue(1000)
-param skuCapacity int = 4
-
 var suffix = uniqueString(resourceGroup().id)
 
 resource eventHubNamespace 'Microsoft.EventHub/namespaces@2021-11-01' = {
@@ -53,7 +48,6 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
   sku: {
     name: skuName
     tier: 'Standard'
-    capacity: skuCapacity
   }
   identity: {
     type: 'SystemAssigned'
@@ -61,7 +55,7 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
   properties: {
     optimizedAutoscale: {
       isEnabled: true
-      minimum: 4
+      minimum: 2
       maximum: 20
       version: 1
     }
