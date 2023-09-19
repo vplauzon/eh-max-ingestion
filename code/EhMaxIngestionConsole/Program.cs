@@ -39,6 +39,7 @@ namespace EhMaxIngestionConsole
             var networkQueue = new ConcurrentQueue<Task>();
             var tasks = Enumerable.Range(0, config.ThreadCount)
                 .Select(i => PushEventsAsync(
+                    i == 0,
                     producer,
                     networkQueue,
                     config.NetworkQueueDepth,
@@ -63,12 +64,14 @@ namespace EhMaxIngestionConsole
         }
 
         private static async Task PushEventsAsync(
+            bool doDisplayEventCount,
             EventHubProducerClient producer,
             ConcurrentQueue<Task> networkQueue,
             int networkQueueDepth,
             CancellationToken token)
         {
             var eventTextList = new List<string>();
+            var lastEventCount = _eventCount;
 
             using (var stream = new MemoryStream())
             {
@@ -85,14 +88,16 @@ namespace EhMaxIngestionConsole
                             networkQueue,
                             networkQueueDepth,
                             GetEventBody(eventTextList));
+                        Interlocked.Add(ref _eventCount, eventTextList.Count);
+                        if (doDisplayEventCount
+                            && (_eventCount / EVENT_COUNT_REPORT) != (lastEventCount / EVENT_COUNT_REPORT))
+                        {
+                            Console.WriteLine($"Events:  {_eventCount}");
+                        }
+                        lastEventCount = _eventCount;
                         eventTextList.Clear();
                     }
                     eventTextList.Add(gatewayEventText);
-                    Interlocked.Increment(ref _eventCount);
-                    if (eventCount % EVENT_COUNT_REPORT == 0)
-                    {
-                        Console.WriteLine($"Events:  {eventCount}");
-                    }
                 }
             }
         }
