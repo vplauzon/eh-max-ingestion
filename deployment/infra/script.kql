@@ -1,8 +1,5 @@
-.create-merge table RawEvents(Id:string)
-
-.create-or-alter table RawEvents ingestion json mapping "DirectJson"
-```
-[
-    { "column" : "Id", "Properties":{"Path":"$.Id"} }
-]
-```
+.create-merge table RawEvents(
+    GatewayId:string,
+    MessageId:string,
+    MessageTimestamp:datetime,
+    Events:dynamic)

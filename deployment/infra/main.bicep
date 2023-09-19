@@ -94,7 +94,6 @@ resource cluster 'Microsoft.Kusto/clusters@2022-02-01' = {
           'x-opt-enqueued-time'
         ]
         managedIdentityResourceId: cluster.id
-        mappingRuleName: 'DirectJson'
         tableName: 'RawEvents'
       }
     }
@@ -195,7 +194,7 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
             }
             {
               name: 'THREAD_COUNT'
-              value: '4'
+              value: '2'
             }
             {
               name: 'NETWORK_QUEUE_DEPTH'
@@ -205,8 +204,8 @@ resource app 'Microsoft.App/containerApps@2023-05-01' = {
         }
       ]
       scale: {
-        minReplicas: 20
-        maxReplicas: 20
+        minReplicas: 10
+        maxReplicas: 10
       }
     }
   }
