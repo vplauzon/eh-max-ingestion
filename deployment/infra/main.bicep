@@ -2,7 +2,7 @@
 param location string = resourceGroup().location
 
 @description('Name of the sku')
-param skuName string = 'Standard_E4d_v5'
+param skuName string = 'Standard_E8d_v5'
 
 @description('# of nodes')
 @minValue(2)
