@@ -3,3 +3,7 @@
     MessageId:string,
     MessageTimestamp:datetime,
     Events:dynamic)
+
+.alter-merge table RawEvents policy retention softdelete = 2h recoverability = disabled
+
+.alter table RawEvents policy caching hot = 2h
